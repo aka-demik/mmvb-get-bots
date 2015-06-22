@@ -1,32 +1,11 @@
 import std.stdio;
+import std.file;
 import std.string;
-import std.array;
 import std.algorithm;
 import std.conv;
 import std.datetime;
 import std.range;
-import clipboard;
-
-
-private enum sBuy = x"CA F3 EF EB FF"c;        //Купля
-private enum sSell = x"CF F0 EE E4 E0 E6 E0"c; //Продажа
-//Номер заявки 	Код бумаги 	Направление 	МинДата и время заключения сделки 	Кол-во ЦБ	Кол-во 	Номер сделки 	 Сумма сделки расчет
-//13464857491	SBER		Купля		14.05.15 15:05				1		1	747,8
-
-private struct MyKey {
-	string instrument;
-	string oper;
-	string lot;
-}
-
-private struct MyOrder {
-	string open;
-	int n;
-	string instrument;
-	string lot;
-	SysTime openTime;
-}
-alias MyOrders = MyOrder[];
+import ae.sys.clipboard;
 
 /// Отчет ММВБ - Исх. Боты
 private struct BotSource {
@@ -36,16 +15,15 @@ private struct BotSource {
 	string instrument;
 	string lot;
 }
-
 private immutable static BotSource[] bots;
 
-BotSource[] getBotsForOrder(in MyOrder o) {
+const(BotSource[]) getBotsForOrder(in SysTime openTime, in string instrument, in string lot) {
 	return bots.filter!(
 		(a) =>
-			o.instrument == a.instrument &&
-			o.lot == a.lot &&
-			abs(o.openTime - a.openTime).total!"seconds" < 5)
-		.array().dup();
+			instrument == a.instrument &&
+			lot == a.lot &&
+			abs(openTime - a.openTime).total!"seconds" < 5)
+		.array();
 }
 
 string toString(in BotSource[] b) {
@@ -54,19 +32,7 @@ string toString(in BotSource[] b) {
 	return format("%s\t%s\t%s\t", b.length, b[0].name, b[0].strategy);
 }
 
-private string antiOper(in string oper) {
-	switch (oper) {
-		case sBuy:
-			return sSell;
-		case sSell:
-			return sBuy;
-		default:
-			throw new Exception("Unknown oper " ~ oper);
-	}
-}
-
 private SysTime excelStrToTime(in string s) {
-	// 29.05.15 12:00
 	auto cols = s.replace(" ", ".")
 		.replace(":", ".")
 		.splitter(".")
@@ -95,45 +61,19 @@ static this() {
 }
 
 void main() {
-	int counter;
 	string result;
-	auto srcS = getTextClipBoard();
-	string[] src = srcS.splitter("\r\n").filter!"a.length".array();
 
-	MyOrders[MyKey] orders;
-	foreach(e; src) {
+	foreach(e; getClipboardText().splitter("\r\n").filter!"a.length") {
 		string[] cols = e.splitter("\t").array();
-		auto keyo = MyKey(cols[1],         (cols[2]), cols[4]);
-		auto keyc = MyKey(cols[1], antiOper(cols[2]), cols[4]);
-
-		if (keyc in orders) { // Если есть что закрывать
-			auto ordrs = orders[keyc];
-			auto order = ordrs[0];
-			ordrs = ordrs[1..$];
-			if (ordrs.length)
-				orders[keyc] = ordrs;
-			else
-				orders.remove(keyc);
-			result ~= format("%s\t%s\topen\t", order.open, order.n);
-			result ~= format("%s\t%s\tclose\t%s\r\n", e, order.n, toString(getBotsForOrder(order)));
-		} else {
-			const tmp = MyOrder(
-				e,
-				++counter,
-				cols[1],
-				cols[4],
-				excelStrToTime(cols[3]));
-			if (keyo in orders)
-				orders[keyo] ~= tmp;
-			else
-				orders[keyo] = [tmp];
-		}
+		result ~= format("%s\t%s\r\n", e, toString(getBotsForOrder(
+			excelStrToTime(cols[3]),  // Время
+			cols[1],                  // Инструмент
+			cols[4]                   // Лот
+			)));
 	}
-	foreach(v; orders.byValue())
-		foreach(e; v)
-			result ~= format("%s\t%s\topened\t\t\t\t\t\t\t\t\t\t%s\r\n", e.open, e.n, toString(getBotsForOrder(e)));
 
-	setTextClipboard(result);
+	setClipboardText(result);
+	std.file.write("dest-orders.txt", result);
 	writeln("Done");
 	readln();
 }
