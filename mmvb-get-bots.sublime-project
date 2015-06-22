@@ -1,0 +1,49 @@
+{
+	"folders":
+	[
+		{
+			"path": ".",
+			"folder_exclude_patterns": [
+				"third-party",
+				"__history",
+				".dub"
+			],
+			"file_exclude_patterns": [
+				"*.sublime-workspace",
+				"dub.userprefs"
+			]
+		}
+	],
+	"build_systems":
+	[
+		{
+			"name": "Dub build",
+			"cmd": ["dub", "build", "--build", "debug"],
+			"encoding":"cp866",
+			"file_regex": "^(.*?)\\(([0-9]+)\\)",
+			"selector": "source.d",
+			"working_dir": "${project_path}",
+			"variants":
+			[
+				{
+					"name": "Run",
+					"cmd": ["dub", "run"]
+				},
+				{
+					"name": "Rebuild",
+					"cmd": ["dub", "build", "--force"]
+				},
+				{
+					"name": "Release",
+					"cmd": ["dub", "build", "-b", "release", "--force"]
+				}
+			]
+		}
+	],
+	"settings":
+	{
+		"trim_trailing_white_space_on_save": true,
+		"ensure_newline_at_eof_on_save": true,
+		"tab_size": 8
+	}
+}
