@@ -28,8 +28,8 @@ const(BotSource[]) getBotsForOrder(in SysTime openTime, in string instrument, in
 
 string toString(in BotSource[] b) {
 	if (!b.length)
-		return "0\t\t\t";
-	return format("%s\t%s\t%s\t", b.length, b[0].name, b[0].strategy);
+		return "0\t\t";
+	return format("%s\t%s\t%s", b.length, b[0].name, b[0].strategy);
 }
 
 private SysTime excelStrToTime(in string s) {
@@ -63,7 +63,7 @@ static this() {
 void main() {
 	string result;
 
-	foreach(e; getClipboardText().splitter("\r\n").filter!"a.length") {
+	foreach(e; getClipboardText()[0..$-1].splitter("\r\n").filter!"strip(a).length > 4") {
 		string[] cols = e.splitter("\t").array();
 		result ~= format("%s\t%s\r\n", e, toString(getBotsForOrder(
 			excelStrToTime(cols[3]),  // Время
