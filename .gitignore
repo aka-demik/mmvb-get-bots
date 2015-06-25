@@ -6,3 +6,5 @@ __dummy.html
 *.sublime-workspace
 *.txt
 *.exe
+/.settings
+/.project
