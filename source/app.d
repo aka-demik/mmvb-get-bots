@@ -7,15 +7,37 @@ import std.datetime;
 import std.range;
 import ae.sys.clipboard;
 
+void main() {
+	string result;
+
+	foreach(e; getClipboardText()[0..$-1].splitter("\r\n").filter!"strip(a).length") {
+		string[] cols = e.splitter("\t").array();
+		if (cols.length <= 4)
+			throw new Exception("Line too short: " ~ e);
+		result ~= format("%s\t%s\r\n", e, toString(getBotsForOrder(
+			excelStrToTime(cols[3]),  // Время
+			cols[1],                  // Инструмент
+			cols[4]                   // Лот
+			)));
+	}
+
+	setClipboardText(result);
+	std.file.write("dest-orders.txt", result);
+	writeln("Done");
+	readln();
+}
+
+private:
+
 /// Отчет ММВБ - Исх. Боты
-private struct BotSource {
+struct BotSource {
 	string name;
 	string strategy;
 	SysTime openTime;
 	string instrument;
 	string lot;
 }
-private immutable static BotSource[] bots;
+immutable static BotSource[] bots;
 
 const(BotSource[]) getBotsForOrder(in SysTime openTime, in string instrument, in string lot) {
 	return bots.filter!(
@@ -32,7 +54,7 @@ string toString(in BotSource[] b) {
 	return format("%s\t%s\t%s", b.length, b[0].name, b[0].strategy);
 }
 
-private SysTime excelStrToTime(in string s) {
+SysTime excelStrToTime(in string s) {
 	auto cols = s.replace(" ", ".")
 		.replace(":", ".")
 		.splitter(".")
@@ -58,22 +80,4 @@ static this() {
 			cols[15]);
 		bots ~= tmp;
 	}
-}
-
-void main() {
-	string result;
-
-	foreach(e; getClipboardText()[0..$-1].splitter("\r\n").filter!"strip(a).length > 4") {
-		string[] cols = e.splitter("\t").array();
-		result ~= format("%s\t%s\r\n", e, toString(getBotsForOrder(
-			excelStrToTime(cols[3]),  // Время
-			cols[1],                  // Инструмент
-			cols[4]                   // Лот
-			)));
-	}
-
-	setClipboardText(result);
-	std.file.write("dest-orders.txt", result);
-	writeln("Done");
-	readln();
 }
