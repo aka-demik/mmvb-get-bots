@@ -10,7 +10,7 @@ import ae.sys.clipboard;
 void main() {
 	string result;
 
-	foreach(e; getClipboardText()[0..$-1].splitter("\r\n").filter!"strip(a).length") {
+	foreach(e; getClipboardText().splitter("\r\n").filter!"strip(a).length") {
 		string[] cols = e.splitter("\t").array();
 		if (cols.length <= 4)
 			throw new Exception("Line too short: " ~ e);

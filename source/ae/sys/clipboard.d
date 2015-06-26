@@ -50,7 +50,9 @@ version (Windows)
 	{
 		static immutable DWORD[] textFormat = [CF_UNICODETEXT];
 		auto format = getClipboard(textFormat)[0];
-		wchar[] ws = (cast(wchar[])format.data)[0..$-1];
+		wchar[] ws = (cast(wchar[])format.data)[];
+		while (ws.length && ws[$-1] == '\0')
+			ws = ws[0..$-1];
 		return ws.toUTF8();
 	}
 
