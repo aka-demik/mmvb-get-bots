@@ -1,8 +1,9 @@
 {
 	"name": "mmvb-get-bots",
-	"description": "A minimal D application.",
+	"description": "",
 	"copyright": "Copyright © 2015, Светлана",
 	"authors": ["Светлана"],
+	"sourceFiles-windows-x86": ["lib/odbc32.lib"],
 	"dependencies": {
 	}
 }

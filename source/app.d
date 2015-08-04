@@ -7,6 +7,8 @@ import std.datetime;
 import std.range;
 import ae.sys.clipboard;
 
+import botssrc;
+
 void main() {
 	string result;
 
@@ -28,16 +30,6 @@ void main() {
 }
 
 private:
-
-/// Отчет ММВБ - Исх. Боты
-struct BotSource {
-	string name;
-	string strategy;
-	SysTime openTime;
-	string instrument;
-	string lot;
-}
-immutable static BotSource[] bots;
 
 const(BotSource[]) getBotsForOrder(in SysTime openTime, in string instrument, in string lot) {
 	return bots.filter!(
@@ -67,17 +59,4 @@ SysTime excelStrToTime(in string s) {
 		cols[3].to!int,
 		cols[4].to!int,
 		0));
-}
-
-static this() {
-	foreach (e; File("source-botes.txt", "rb").byLineCopy().drop(1)) {
-		string[] cols = e.splitter("\t").array();
-		const tmp = BotSource(
-			cols[0],
-			cols[12],
-			excelStrToTime(cols[16]),
-			cols[18],
-			cols[15]);
-		bots ~= tmp;
-	}
 }
