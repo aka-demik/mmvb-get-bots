@@ -10,6 +10,8 @@ import ae.sys.clipboard;
 import botssrc;
 
 void main() {
+	writeln("Load clipboard...");
+
 	string result;
 
 	foreach(e; getClipboardText().splitter("\r\n").filter!"strip(a).length") {
@@ -24,7 +26,7 @@ void main() {
 	}
 
 	setClipboardText(result);
-	std.file.write("dest-orders.txt", result);
+	//std.file.write("dest-orders.txt", result);
 	writeln("Done");
 	readln();
 }
@@ -58,5 +60,5 @@ SysTime excelStrToTime(in string s) {
 		cols[0].to!int,
 		cols[3].to!int,
 		cols[4].to!int,
-		0));
+		0), UTC());
 }

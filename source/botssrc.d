@@ -24,7 +24,7 @@ immutable static BotSource[] bots;
 
 private:
 
-static immutable char[] q = 
+static immutable char[] q =
 "SELECT oo.BotName, oo.TransID, oo.State, ot.Type, oo.TryNum, oo.StopLoss, oo.TakeProfit, oo.OpenTime, oo.CloseTime, oo.MainOrder, oo.OrderNum, oo.CurrentPrice, bt.Strategy, bt.Description, bt.Symbol, bt.Lot
 FROM botwar.bots bt, botwar.moex_statetable oo, botwar.order_type ot
 WHERE oo.BotName = bt.BotName AND oo.Type = ot.Number
@@ -33,7 +33,7 @@ ORDER BY oo.BotName, oo.OrderNum
 
 private static this() {
 	writeln("Load bots...");
-	
+
 	SQLHENV henv;
 	SQLHDBC hdbc;
 	HSTMT   hstmt;
@@ -54,9 +54,9 @@ private static this() {
 	}
 
 	enforce(SQL_SUCCEEDED(
-		SQLConnect(hdbc, 
-			cast(char *)"MySQL".ptr, SQL_NTS, 
-			cast(char *)"\0".ptr, SQL_NTS, 
+		SQLConnect(hdbc,
+			cast(char *)"MySQL".ptr, SQL_NTS,
+			cast(char *)"\0".ptr, SQL_NTS,
 			cast(char *)"\0".ptr, SQL_NTS)),
 		"Can't connect to DB");
 
@@ -87,13 +87,17 @@ private static this() {
 		while (SQL_SUCCEEDED(SQLFetch(hstmt))) {
 			tmp.name = name[0..nameLen / 2].to!string();
 			tmp.strategy = strat[0..stratLen / 2].to!string();
-			tmp.openTime = SysTime(tm[0..tmLen / 2].to!string().to!int.unixTimeToStdTime());
+			tmp.openTime = SysTime(tm[0..tmLen / 2]
+				.to!string()
+				.to!int
+				.unixTimeToStdTime(),
+				UTC()) + 3.hours();
 			tmp.instrument = inst[0..instLen / 2].to!string();
+			if (tmp.instrument == "SPFBRTS")
+				tmp.instrument = "RIM5";
 			tmp.lot = lot[0..lotLen / 2].to!string();
 			bots ~= tmp;
-			writeln(tmp);
+			//writeln(tmp);
 		}
 	}
 }
-
-
