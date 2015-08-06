@@ -16,6 +16,7 @@ struct BotSource {
 	string name;
 	string strategy;
 	SysTime openTime;
+	SysTime closeTime;
 	string instrument;
 	string lot;
 }
@@ -75,21 +76,27 @@ private static this() {
 		enum MAX_L = 255;
 		BotSource tmp;
 
-		wchar[MAX_L] name, strat, inst, lot, tm;
-		SQLINTEGER nameLen, stratLen, instLen, lotLen, tmLen;
+		wchar[MAX_L] name, strat, inst, lot, tmo, tmc;
+		SQLINTEGER nameLen, stratLen, instLen, lotLen, tmoLen, tmcLen;
 
 
 		SQLBindCol(hstmt, 01, SQL_C_WCHAR, name.ptr, MAX_L, &nameLen);
 		SQLBindCol(hstmt, 13, SQL_C_WCHAR, strat.ptr, MAX_L, &stratLen);
-		SQLBindCol(hstmt, 08, SQL_C_WCHAR, tm.ptr, MAX_L, &tmLen);
+		SQLBindCol(hstmt,  8, SQL_C_WCHAR, tmo.ptr, MAX_L, &tmoLen);
+		SQLBindCol(hstmt,  9, SQL_C_WCHAR, tmc.ptr, MAX_L, &tmcLen);
 		SQLBindCol(hstmt, 15, SQL_C_WCHAR, inst.ptr, MAX_L, &instLen);
 		SQLBindCol(hstmt, 16, SQL_C_WCHAR, lot.ptr, MAX_L, &lotLen);
 		while (SQL_SUCCEEDED(SQLFetch(hstmt))) {
 			tmp.name = name[0..nameLen / 2].to!string();
 			tmp.strategy = strat[0..stratLen / 2].to!string();
-			tmp.openTime = SysTime(tm[0..tmLen / 2]
+			tmp.openTime = SysTime(tmo[0..tmoLen / 2]
 				.to!string()
-				.to!int
+				.to!int()
+				.unixTimeToStdTime(),
+				UTC()) + 3.hours();
+			tmp.closeTime = SysTime(tmc[0..tmcLen / 2]
+				.to!string()
+				.to!int()
 				.unixTimeToStdTime(),
 				UTC()) + 3.hours();
 			tmp.instrument = inst[0..instLen / 2].to!string();
@@ -97,7 +104,6 @@ private static this() {
 				tmp.instrument = "RIM5";
 			tmp.lot = lot[0..lotLen / 2].to!string();
 			bots ~= tmp;
-			//writeln(tmp);
 		}
 	}
 }

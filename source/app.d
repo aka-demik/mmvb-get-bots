@@ -38,7 +38,9 @@ const(BotSource[]) getBotsForOrder(in SysTime openTime, in string instrument, in
 		(a) =>
 			instrument == a.instrument &&
 			lot == a.lot &&
-			abs(openTime - a.openTime).total!"seconds" < 5)
+			(
+				abs(openTime - a.openTime).total!"seconds" < 5 ||
+				abs(openTime - a.closeTime).total!"seconds" < 5))
 		.array();
 }
 
