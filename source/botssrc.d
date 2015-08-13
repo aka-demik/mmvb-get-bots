@@ -2,6 +2,7 @@ import std.conv : to;
 import std.stdio;
 import std.datetime;
 import std.exception;
+import std.string;
 
 import etc.c.odbc.sql;
 import etc.c.odbc.sqlext;
@@ -19,6 +20,24 @@ struct BotSource {
 	SysTime closeTime;
 	string instrument;
 	string lot;
+	string type;
+
+	int opCmp(BotSource b) pure nothrow @safe const { 
+		int r = cmp(name, b.name);
+		if (!r)
+			r = cmp(strategy, b.strategy);
+		if (!r)
+			r = cmp(instrument, b.instrument);
+		if (!r)
+			r = cmp(lot, b.lot);
+		if (!r)
+			r = cmp(type, b.type);
+//		if (!r)
+//			r = openTime.opCmp(b.openTime);
+//		if (!r)
+//			r = closeTime.opCmp(b.closeTime);
+		return r;
+	}
 }
 
 immutable static BotSource[] bots;
@@ -76,8 +95,8 @@ private static this() {
 		enum MAX_L = 255;
 		BotSource tmp;
 
-		wchar[MAX_L] name, strat, inst, lot, tmo, tmc;
-		SQLINTEGER nameLen, stratLen, instLen, lotLen, tmoLen, tmcLen;
+		wchar[MAX_L] name, strat, inst, lot, tmo, tmc, type;
+		SQLINTEGER nameLen, stratLen, instLen, lotLen, tmoLen, tmcLen, typeLen;
 
 
 		SQLBindCol(hstmt, 01, SQL_C_WCHAR, name.ptr, MAX_L, &nameLen);
@@ -86,6 +105,7 @@ private static this() {
 		SQLBindCol(hstmt,  9, SQL_C_WCHAR, tmc.ptr, MAX_L, &tmcLen);
 		SQLBindCol(hstmt, 15, SQL_C_WCHAR, inst.ptr, MAX_L, &instLen);
 		SQLBindCol(hstmt, 16, SQL_C_WCHAR, lot.ptr, MAX_L, &lotLen);
+		SQLBindCol(hstmt,  4, SQL_C_WCHAR, type.ptr, MAX_L, &typeLen);
 		while (SQL_SUCCEEDED(SQLFetch(hstmt))) {
 			tmp.name = name[0..nameLen / 2].to!string();
 			tmp.strategy = strat[0..stratLen / 2].to!string();
@@ -100,9 +120,21 @@ private static this() {
 				.unixTimeToStdTime(),
 				UTC()) + 3.hours();
 			tmp.instrument = inst[0..instLen / 2].to!string();
-			if (tmp.instrument == "SPFBRTS")
-				tmp.instrument = "RIM5";
 			tmp.lot = lot[0..lotLen / 2].to!string();
+			switch (type[0..typeLen / 2].to!string()) {
+				case "Buy":
+				case "BuyStop":
+					tmp.type = "Купля";
+				break;
+
+				case "Sell":
+				case "SellStop":
+					tmp.type = "Продажа";
+				break;
+
+				default:
+					throw new Exception("unknown type " ~ type[0..typeLen / 2].to!string());
+			}
 			bots ~= tmp;
 		}
 	}
