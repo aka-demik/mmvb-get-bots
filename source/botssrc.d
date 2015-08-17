@@ -45,7 +45,7 @@ immutable static BotSource[] bots;
 private:
 
 static immutable char[] q =
-"SELECT oo.BotName, oo.TransID, oo.State, ot.Type, oo.TryNum, oo.StopLoss, oo.TakeProfit, oo.OpenTime, oo.CloseTime, oo.MainOrder, oo.OrderNum, oo.CurrentPrice, bt.Strategy, bt.Description, bt.Symbol, bt.Lot
+"SELECT oo.BotName, oo.TransID, oo.State, ot.Type, oo.TryNum, oo.StopLoss, oo.TakeProfit, oo.OpenTime, oo.CloseTime, oo.MainOrder, oo.OrderNum, oo.CurrentPrice, bt.Strategy, bt.Description, bt.Symbol, oo.Lot
 FROM botwar.bots bt, botwar.moex_statetable oo, botwar.order_type ot
 WHERE oo.BotName = bt.BotName AND oo.Type = ot.Number
 ORDER BY oo.BotName, oo.OrderNum
